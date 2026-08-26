@@ -29,6 +29,7 @@ def create_user(
             backlogs
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        RETURNING id
         """,
         (
             name,
@@ -43,10 +44,9 @@ def create_user(
         )
     )
 
+    user_id = cursor.fetchone()["id"]
+
     connection.commit()
-
-    user_id = cursor.lastrowid
-
     connection.close()
 
     return user_id
@@ -54,7 +54,6 @@ def create_user(
 
 def get_user_by_email(email):
     connection = get_db_connection()
-
     cursor = connection.cursor()
 
     cursor.execute(
@@ -63,22 +62,34 @@ def get_user_by_email(email):
     )
 
     user = cursor.fetchone()
-
     connection.close()
 
     return user
+
+
 def get_user_by_id(user_id):
     connection = get_db_connection()
     cursor = connection.cursor()
 
     cursor.execute(
-        "SELECT id, name, email, student_id, branch, semester, cgpa, previous_sgpa, backlogs "
-        "FROM users WHERE id = ?",
+        """
+        SELECT
+            id,
+            name,
+            email,
+            student_id,
+            branch,
+            semester,
+            cgpa,
+            previous_sgpa,
+            backlogs
+        FROM users
+        WHERE id = ?
+        """,
         (user_id,)
     )
 
     user = cursor.fetchone()
-
     connection.close()
 
     return user
