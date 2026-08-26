@@ -1,0 +1,6 @@
+Flask
+Flask-JWT-Extended
+Werkzeug
+openpyxl
+psycopg2-binary
+gunicorn

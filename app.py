@@ -5,11 +5,15 @@ from database.db import get_db_connection
 from routes.auth import auth_bp
 from routes.subscriptions import subscriptions_bp
 from routes.plans import plans_bp
+import os
 
 app = Flask(__name__)
 
 # JWT configuration
-app.config["JWT_SECRET_KEY"] = "learnhub_super_secret_key_2026"
+app.config["JWT_SECRET_KEY"] = os.getenv(
+    "JWT_SECRET_KEY",
+    "learnhub_super_secret_key_2026"
+)
 
 jwt = JWTManager(app)
 
@@ -17,7 +21,12 @@ jwt = JWTManager(app)
 def initialize_database():
     connection = get_db_connection()
 
-    with open("database/schema.sql", "r") as file:
+    if os.getenv("DATABASE_URL"):
+        schema_file = "database/schema_postgres.sql"
+    else:
+        schema_file = "database/schema.sql"
+
+    with open(schema_file, "r") as file:
         schema = file.read()
 
     connection.executescript(schema)
