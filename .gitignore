@@ -1,0 +1,8 @@
+.env
+learnhub.db
+__pycache__/
+*.pyc
+.venv/
+venv/
+.vscode/
+Git-2.55.0.5-64-bit.exe

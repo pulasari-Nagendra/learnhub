@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Dashboard - LearnHub</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            color: #1f2937;
+        }
+
+        .navbar {
+            background: #1f2937;
+            color: white;
+            padding: 18px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar h2 {
+            margin: 0;
+        }
+
+        .navbar button {
+            background: #ef4444;
+            border: none;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .navbar button:hover {
+            background: #dc2626;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1100px;
+            margin: 35px auto;
+        }
+
+        .welcome {
+            margin-bottom: 25px;
+        }
+
+        .welcome h1 {
+            margin-bottom: 8px;
+        }
+
+        .welcome p {
+            color: #6b7280;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        .student-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+        }
+
+        .info-box {
+            background: #f8fafc;
+            padding: 18px;
+            border-radius: 12px;
+        }
+
+        .info-label {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 6px;
+        }
+
+        .info-value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .subscription-card {
+            border-left: 6px solid #2563eb;
+        }
+
+        .subscription-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+        }
+
+        .subscription-box {
+            background: #f8fafc;
+            padding: 18px;
+            border-radius: 12px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: #dcfce7;
+            color: #166534;
+            font-weight: bold;
+        }
+
+        .actions {
+            margin-top: 20px;
+        }
+
+        .plans-button {
+            display: inline-block;
+            text-decoration: none;
+            background: #2563eb;
+            color: white;
+            padding: 11px 20px;
+            border-radius: 8px;
+        }
+
+        .plans-button:hover {
+            background: #1d4ed8;
+        }
+
+        #message,
+        #subscription_message {
+            margin-top: 15px;
+            color: #dc2626;
+        }
+
+        @media (max-width: 700px) {
+            .navbar {
+                padding: 15px 20px;
+            }
+
+            .container {
+                width: 94%;
+            }
+
+            .student-grid,
+            .subscription-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .export-button {
+        margin-left: 10px;
+        padding: 11px 20px;
+        border: none;
+        border-radius: 8px;
+        background: #059669;
+        color: white;
+        font-size: 15px;
+        cursor: pointer;
+        }
+
+    .export-button:hover {
+    background: #047857;
+    }
+    </style>
+</head>
+
+<body>
+
+    <div class="navbar">
+        <h2>LearnHub 🎓</h2>
+
+        <button onclick="logout()">
+            Logout
+        </button>
+    </div>
+
+
+    <div class="container">
+
+        <div class="welcome">
+            <h1>Welcome to your Dashboard 👋</h1>
+            <p>Track your academic information and subscription.</p>
+        </div>
+
+
+        <!-- Student Information -->
+
+        <div class="card">
+
+            <h2>Student Information</h2>
+
+            <div class="student-grid">
+
+                <div class="info-box">
+                    <div class="info-label">Name</div>
+                    <div class="info-value" id="name">Loading...</div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-label">Student ID</div>
+                    <div class="info-value" id="student_id">Loading...</div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-label">Branch</div>
+                    <div class="info-value" id="branch">Loading...</div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-label">Semester</div>
+                    <div class="info-value" id="semester">Loading...</div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-label">CGPA</div>
+                    <div class="info-value" id="cgpa">Loading...</div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-label">Previous Semester SGPA</div>
+                    <div class="info-value" id="previous_sgpa">Loading...</div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-label">Backlogs</div>
+                    <div class="info-value" id="backlogs">Loading...</div>
+                </div>
+
+            </div>
+
+            <p id="message"></p>
+
+        </div>
+
+
+        <!-- Subscription -->
+
+        <div class="card subscription-card">
+
+            <h2>My Subscription</h2>
+
+            <div class="subscription-grid">
+
+                <div class="subscription-box">
+                    <div class="info-label">Plan</div>
+                    <div class="info-value" id="plan_name">Loading...</div>
+                </div>
+
+                <div class="subscription-box">
+                    <div class="info-label">Price</div>
+                    <div class="info-value">
+                        ₹<span id="plan_price">Loading...</span>
+                    </div>
+                </div>
+
+                <div class="subscription-box">
+                    <div class="info-label">Status</div>
+                    <div class="info-value">
+                        <span class="status" id="plan_status">Loading...</span>
+                    </div>
+                </div>
+
+                <div class="subscription-box">
+                    <div class="info-label">Start Date</div>
+                    <div class="info-value" id="start_date">Loading...</div>
+                </div>
+
+                <div class="subscription-box">
+                    <div class="info-label">End Date</div>
+                    <div class="info-value" id="end_date">Loading...</div>
+                </div>
+
+            <div class="actions">
+
+                <a href="/plans" class="plans-button">
+                Manage Plans
+                </a>
+
+                <button
+                class="export-button"
+                onclick="exportStudents()">
+                📊 Export Students
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        async function loadDashboard() {
+
+            const token = localStorage.getItem("access_token");
+
+            if (!token) {
+                window.location.href = "/login";
+                return;
+            }
+
+            try {
+
+                const response = await fetch("/api/dashboard", {
+                    method: "GET",
+                    headers: {
+                        "Authorization": "Bearer " + token
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+
+                    document.getElementById("message").textContent =
+                        data.message || "Unable to load dashboard.";
+
+                    return;
+                }
+
+                const student = data.student;
+
+                document.getElementById("name").textContent =
+                    student.name;
+
+                document.getElementById("student_id").textContent =
+                    student.student_id;
+
+                document.getElementById("branch").textContent =
+                    student.branch;
+
+                document.getElementById("semester").textContent =
+                    student.semester;
+
+                document.getElementById("cgpa").textContent =
+                    student.cgpa;
+
+                document.getElementById("previous_sgpa").textContent =
+                    student.previous_sgpa;
+
+                document.getElementById("backlogs").textContent =
+                    student.backlogs;
+
+            } catch (error) {
+
+                document.getElementById("message").textContent =
+                    "Could not connect to the server.";
+
+                console.error(error);
+            }
+        }
+
+
+        async function loadSubscription() {
+
+            const token = localStorage.getItem("access_token");
+
+            if (!token) {
+                window.location.href = "/login";
+                return;
+            }
+
+            try {
+
+                const response = await fetch("/api/my-subscription", {
+                    method: "GET",
+                    headers: {
+                        "Authorization": "Bearer " + token
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+
+                    document.getElementById("subscription_message").textContent =
+                        data.message || "No active subscription.";
+
+                    return;
+                }
+
+                const subscription = data.subscription;
+
+                document.getElementById("plan_name").textContent =
+                    subscription.plan_name;
+
+                document.getElementById("plan_price").textContent =
+                    subscription.price;
+
+                document.getElementById("plan_status").textContent =
+                    subscription.status;
+
+                document.getElementById("start_date").textContent =
+                    subscription.start_date;
+
+                document.getElementById("end_date").textContent =
+                    subscription.end_date;
+
+            } catch (error) {
+
+                document.getElementById("subscription_message").textContent =
+                    "Could not connect to the server.";
+
+                console.error(error);
+            }
+        }
+
+
+        function logout() {
+
+            localStorage.removeItem("access_token");
+
+            window.location.href = "/login";
+        }
+        async function exportStudents() {
+
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+        window.location.href = "/login";
+        return;
+    }
+
+    try {
+
+        const response = await fetch("/api/export-students", {
+            method: "GET",
+            headers: {
+                "Authorization": "Bearer " + token
+            }
+        });
+
+        if (!response.ok) {
+
+            const data = await response.json();
+
+            alert(
+                data.message ||
+                "Unable to export student data."
+            );
+
+            return;
+        }
+
+        const blob = await response.blob();
+
+        const url = window.URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+
+        link.href = url;
+        link.download = "learnhub_students.xlsx";
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        link.remove();
+
+        window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert("Could not connect to the server.");
+    }
+}
+
+        loadDashboard();
+        loadSubscription();
+
+    </script>
+
+</body>
+</html>

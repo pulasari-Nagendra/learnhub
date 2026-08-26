@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Plans - LearnHub</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+        }
+
+        .header {
+            background: #1f2937;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+        }
+
+        .header p {
+            margin-bottom: 0;
+        }
+
+        .plans-container {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            flex-wrap: wrap;
+            padding: 40px 20px;
+        }
+
+        .plan-card {
+            background: white;
+            width: 300px;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+
+        .plan-card h2 {
+            margin-top: 0;
+            font-size: 28px;
+        }
+
+        .price {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        .features {
+            min-height: 60px;
+            margin: 20px 0;
+            color: #555;
+        }
+
+        .plan-card button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .plan-card button:hover {
+            background: #1d4ed8;
+        }
+
+        .plan-card button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .current-plan {
+            border: 3px solid #2563eb;
+        }
+
+        .current-label {
+            color: #2563eb;
+            font-weight: bold;
+        }
+
+        .bottom-links {
+            text-align: center;
+            padding-bottom: 40px;
+        }
+
+        .bottom-links a {
+            text-decoration: none;
+            color: #2563eb;
+        }
+
+        #message {
+            text-align: center;
+            color: red;
+        }
+        .dashboard-link {
+        display: inline-block;
+        text-decoration: none;
+        background: #1f2937;
+        color: white;
+        padding: 11px 20px;
+        border-radius: 8px;
+        }
+
+        .dashboard-link:hover {
+        background: #111827;
+        }
+        /* Professional Modal */
+
+        .modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.55);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        }
+
+        .modal-content {
+        background: white;
+        width: 90%;
+        max-width: 430px;
+        padding: 30px;
+        border-radius: 18px;
+        text-align: center;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+        animation: modalAppear 0.2s ease-out;
+        }
+
+        .modal-content h2 {
+        margin-top: 0;
+        color: #1f2937;
+        }
+
+        .modal-content p {
+        color: #6b7280;
+        line-height: 1.6;
+        }
+
+        .modal-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        margin-top: 25px;
+        }
+
+    .modal-btn {
+        border: none;
+        padding: 11px 22px;
+        border-radius: 8px;
+        font-size: 15px;
+        cursor: pointer;
+        }
+
+        .cancel-btn {
+        background: #e5e7eb;
+        color: #374151;
+        }
+
+        .confirm-btn {
+        background: #2563eb;
+        color: white;
+        }
+
+        .confirm-btn:hover {
+        background: #1d4ed8;
+        }
+
+        .cancel-btn:hover {
+        background: #d1d5db;
+        }
+
+        .success-icon {
+        font-size: 48px;
+        margin-bottom: 10px;
+        }
+
+        @keyframes modalAppear {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+        }
+        .cancel-subscription-btn {
+        border: none;
+        cursor: pointer;
+        font-size: 15px;
+        background: #dc2626;
+        color: white;
+        padding: 11px 20px;
+        border-radius: 8px;
+        }
+
+        .cancel-subscription-btn:hover {
+        background: #b91c1c;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>Choose Your LearnHub Plan 🚀</h1>
+        <p>Choose the plan that fits your learning journey.</p>
+    </div>
+
+    <div id="plans-container" class="plans-container">
+        Loading plans...
+    </div>
+
+    <p id="message"></p>
+    <div class="bottom-links">
+
+        <button
+            class="dashboard-link"
+            onclick="cancelSubscription()">
+            Cancel Subscription
+        </button>
+
+        <br><br>
+
+        <a href="/dashboard" class="dashboard-link">
+            ← Back to Dashboard
+        </a>
+
+    
+
+    <!-- Change Plan Modal -->
+
+<div id="changePlanModal" class="modal">
+
+    <div class="modal-content">
+
+        <h2>Change Your Plan</h2>
+
+        <p id="changePlanText">
+            You already have an active subscription.
+            Would you like to change your plan?
+        </p>
+
+        <div class="modal-buttons">
+
+            <button
+                class="modal-btn cancel-btn"
+                onclick="closeChangePlanModal()">
+                Cancel
+            </button>
+
+            <button
+                class="modal-btn confirm-btn"
+                onclick="confirmChangePlan()">
+                Continue
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- Success Modal -->
+
+<div id="successModal" class="modal">
+
+    <div class="modal-content">
+
+        <div class="success-icon">✅</div>
+
+        <h2>Subscription Updated</h2>
+
+        <p id="successMessage"></p>
+
+        <div class="modal-buttons">
+
+            <button
+                class="modal-btn confirm-btn"
+                onclick="closeSuccessModal()">
+                Continue
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+<!-- Cancel Subscription Modal -->
+
+<div id="cancelModal" class="modal">
+
+    <div class="modal-content">
+
+        <h2>Cancel Subscription?</h2>
+
+        <p>
+            Are you sure you want to cancel your current subscription?
+        </p>
+
+        <div class="modal-buttons">
+
+            <button
+                class="modal-btn cancel-btn"
+                onclick="closeCancelModal()">
+                Keep Subscription
+            </button>
+
+            <button
+                class="modal-btn confirm-btn"
+                onclick="confirmCancelSubscription()">
+                Yes, Cancel
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+    <script>
+
+        let currentPlanId = null;
+
+
+        async function loadCurrentSubscription() {
+
+            const token = localStorage.getItem("access_token");
+
+            if (!token) {
+                window.location.href = "/login";
+                return;
+            }
+
+            try {
+
+                const response = await fetch("/api/my-subscription", {
+                    method: "GET",
+                    headers: {
+                        "Authorization": "Bearer " + token
+                    }
+                });
+
+                if (response.ok) {
+
+                    const data = await response.json();
+
+                    // We only need the current plan ID here.
+                    // Since my-subscription returns plan_name, we get the plan
+                    // ID from the plans list later.
+                    return data.subscription;
+
+                }
+
+                return null;
+
+            } catch (error) {
+
+                console.error(error);
+                return null;
+            }
+        }
+
+
+        async function loadPlans() {
+
+            try {
+
+                const token = localStorage.getItem("access_token");
+
+                if (!token) {
+                    window.location.href = "/login";
+                    return;
+                }
+
+                const [plansResponse, subscription] = await Promise.all([
+                    fetch("/api/plans"),
+                    loadCurrentSubscription()
+                ]);
+
+                const data = await plansResponse.json();
+
+                if (!plansResponse.ok) {
+                    document.getElementById("message").textContent =
+                        data.message || "Unable to load plans.";
+                    return;
+                }
+
+                const container = document.getElementById("plans-container");
+
+                container.innerHTML = "";
+
+                data.plans.forEach(plan => {
+
+                    let isCurrentPlan = false;
+
+                    if (
+                        subscription &&
+                        subscription.plan_name === plan.name
+                    ) {
+                        isCurrentPlan = true;
+                        currentPlanId = plan.id;
+                    }
+
+                    const planDiv = document.createElement("div");
+
+                    planDiv.className = "plan-card";
+
+                    if (isCurrentPlan) {
+                        planDiv.classList.add("current-plan");
+                    }
+
+                    let buttonText = "Choose " + plan.name;
+
+                    if (isCurrentPlan) {
+                        buttonText = "Current Plan";
+                    } else if (subscription) {
+                        if (plan.price > subscription.price) {
+                            buttonText = "Upgrade to " + plan.name;
+                        } else if (plan.price < subscription.price) {
+                            buttonText = "Switch to " + plan.name;
+                        } else {
+                            buttonText = "Choose " + plan.name;
+                        }
+                    }
+
+                    planDiv.innerHTML = `
+                        <h2>${plan.name}</h2>
+
+                        ${
+                            isCurrentPlan
+                            ? '<p class="current-label">✓ Current Plan</p>'
+                            : ''
+                        }
+
+                        <div class="price">
+                            ₹${plan.price}
+                            <small>/month</small>
+                        </div>
+
+                        <div class="features">
+                            ${plan.features}
+                        </div>
+
+                        <button
+                            onclick="subscribe(${plan.id})"
+                            ${isCurrentPlan ? "disabled" : ""}
+                        >
+                            ${buttonText}
+                        </button>
+                    `;
+
+                    container.appendChild(planDiv);
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                document.getElementById("message").textContent =
+                    "Could not connect to the server.";
+            }
+        }
+
+
+        let selectedPlanId = null;
+
+
+        async function subscribe(planId) {
+
+            const token = localStorage.getItem("access_token");
+
+            if (!token) {
+                window.location.href = "/login";
+                return;
+            }
+
+            try {
+
+                const response = await fetch("/api/subscribe", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": "Bearer " + token,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        plan_id: planId
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+
+                    showSuccessModal(data.message);
+
+                    return;
+                }
+
+                if (
+                    response.status === 400 &&
+                    data.message === "User already has an active subscription"
+                ) {
+
+                    selectedPlanId = planId;
+
+                    openChangePlanModal();
+
+                    return;
+                }
+
+                showMessage(data.message || "Subscription failed.");
+
+            } catch (error) {
+
+                console.error(error);
+
+                showMessage("Could not connect to the server.");
+            }
+        }
+
+
+        async function changeSubscription() {
+
+            const token = localStorage.getItem("access_token");
+
+            if (!selectedPlanId) {
+                return;
+            }
+
+            closeChangePlanModal();
+
+            try {
+
+                const response = await fetch("/api/change-subscription", {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer " + token,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    plan_id: selectedPlanId
+                })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+
+                    showMessage(
+                    data.message ||
+                    "Could not change subscription."
+                    );
+
+                    return;
+                }
+
+                showSuccessModal(
+                    `${data.message}<br><br>
+                    <strong>New Plan:</strong> ${data.plan}<br>
+                    <strong>Price:</strong> ₹${data.price}/month`
+                );
+
+            } catch (error) {
+
+                console.error(error);
+
+                showMessage("Could not connect to the server.");
+            }
+        }
+        function openChangePlanModal() {
+
+            document.getElementById("changePlanModal").style.display = "flex";
+        }
+
+
+        function closeChangePlanModal() {
+
+            document.getElementById("changePlanModal").style.display = "none";
+        }
+
+
+        function confirmChangePlan() {
+
+            changeSubscription();
+        }
+
+
+        function showSuccessModal(message) {
+
+            document.getElementById("successMessage").innerHTML = message;
+
+            document.getElementById("successModal").style.display = "flex";
+        }
+
+
+        function closeSuccessModal() {
+
+            document.getElementById("successModal").style.display = "none";
+
+            window.location.href = "/dashboard";
+        }
+
+
+        function showMessage(message) {
+
+            document.getElementById("message").textContent = message;
+        }
+        function cancelSubscription() {
+
+            const token = localStorage.getItem("access_token");
+
+            if (!token) {
+                window.location.href = "/login";
+                return;
+            }
+
+            document.getElementById("cancelModal").style.display = "flex";
+        }
+
+
+        function closeCancelModal() {
+
+            document.getElementById("cancelModal").style.display = "none";
+        }
+
+
+        async function confirmCancelSubscription() {
+
+            const token = localStorage.getItem("access_token");
+
+            closeCancelModal();
+
+            try {
+
+                    const response = await fetch("/api/cancel-subscription", {
+                        method: "POST",
+                        headers: {
+                        "Authorization": "Bearer " + token
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+
+                        showMessage(
+                        data.message ||
+                        "Could not cancel subscription."
+                        );
+
+                        return;
+                    }
+
+                    showSuccessModal(
+                    "Your subscription has been cancelled successfully."
+                    );
+
+                }catch (error) {
+
+                    console.error(error);
+
+                    showMessage("Could not connect to the server.");
+                }
+        }
+        loadPlans();
+
+    </script>
+
+</body>
+</html>
