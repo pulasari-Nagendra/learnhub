@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request, render_template, send_file
-import sqlite3
+
 import tempfile
 import os
 
@@ -7,17 +7,11 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
+from database.db import get_db_connection
 
 users_bp = Blueprint("users", __name__)
 
 
-def get_db_connection():
-
-    conn = sqlite3.connect("learnhub.db")
-
-    conn.row_factory = sqlite3.Row
-
-    return conn
 
 
 @users_bp.route("/api/dashboard", methods=["GET"])
