@@ -1,15 +1,12 @@
 from flask import Blueprint, request, jsonify
-import sqlite3
+from database.db import get_db_connection
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime, timedelta
 
 subscriptions_bp = Blueprint("subscriptions", __name__)
 
 
-def get_db_connection():
-    conn = sqlite3.connect("learnhub.db")
-    conn.row_factory = sqlite3.Row
-    return conn
+
 
 
 @subscriptions_bp.route("/api/plans", methods=["GET"])
