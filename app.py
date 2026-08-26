@@ -60,6 +60,7 @@ def dashboard_page():
 def plans_page():
     return render_template("plans.html")
 
+initialize_database()
+
 if __name__ == "__main__":
-    initialize_database()
     app.run(debug=True)
