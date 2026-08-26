@@ -13,9 +13,8 @@ def create_user(
     backlogs
 ):
     connection = get_db_connection()
-    cursor = connection.cursor()
 
-    cursor.execute(
+    cursor = connection.execute(
         """
         INSERT INTO users (
             name,
@@ -54,14 +53,14 @@ def create_user(
 
 def get_user_by_email(email):
     connection = get_db_connection()
-    cursor = connection.cursor()
 
-    cursor.execute(
+    cursor = connection.execute(
         "SELECT * FROM users WHERE email = ?",
         (email,)
     )
 
     user = cursor.fetchone()
+
     connection.close()
 
     return user
@@ -69,9 +68,8 @@ def get_user_by_email(email):
 
 def get_user_by_id(user_id):
     connection = get_db_connection()
-    cursor = connection.cursor()
 
-    cursor.execute(
+    cursor = connection.execute(
         """
         SELECT
             id,
@@ -90,6 +88,7 @@ def get_user_by_id(user_id):
     )
 
     user = cursor.fetchone()
+
     connection.close()
 
     return user
