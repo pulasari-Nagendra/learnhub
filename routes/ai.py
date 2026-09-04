@@ -1,4 +1,10 @@
-from flask import Blueprint, jsonify, request
+from flask import (
+    Blueprint,
+    jsonify,
+    request,
+    Response,
+    stream_with_context
+)
 
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
@@ -250,7 +256,11 @@ def ai_chat():
 
     user_id = get_jwt_identity()
 
-    if not has_ai_access(user_id):
+    # -----------------------------------------
+    # Premium access
+    # -----------------------------------------
+
+    if not user_has_feature(user_id, "ai_assistant"):
 
         return jsonify({
             "message": (
@@ -260,15 +270,17 @@ def ai_chat():
         }), 403
 
 
+    # -----------------------------------------
+    # Read request
+    # -----------------------------------------
+
     data = request.get_json(silent=True) or {}
 
     user_message = str(
         data.get("message", "")
     ).strip()
 
-    conversation_id = data.get(
-        "conversation_id"
-    )
+    conversation_id = data.get("conversation_id")
 
 
     if not user_message:
@@ -289,12 +301,11 @@ def ai_chat():
 
     try:
 
+        # =====================================
+        # Get conversation + history
+        # =====================================
+
         connection = get_db_connection()
-
-
-        # ------------------------------------------------
-        # Verify conversation belongs to this user
-        # ------------------------------------------------
 
         conversation = connection.execute(
             """
@@ -319,10 +330,6 @@ def ai_chat():
             }), 404
 
 
-        # ------------------------------------------------
-        # Load selected conversation history
-        # ------------------------------------------------
-
         history_rows = connection.execute(
             """
             SELECT role, message
@@ -341,20 +348,17 @@ def ai_chat():
         connection.close()
 
 
-        # ------------------------------------------------
-        # Convert history to Gemini format
-        # ------------------------------------------------
+        # =====================================
+        # Build Gemini history
+        # =====================================
 
         contents = []
 
-
         for row in history_rows[-20:]:
-
-            role = row["role"]
 
             gemini_role = (
                 "user"
-                if role == "user"
+                if row["role"] == "user"
                 else "model"
             )
 
@@ -383,135 +387,159 @@ def ai_chat():
         )
 
 
-        # ------------------------------------------------
-        # Ask Gemini
-        # ------------------------------------------------
+        # =====================================
+        # Streaming response
+        # =====================================
 
-        response = client.models.generate_content(
-            model="gemini-3.6-flash",
-            contents=contents
-        )
+        @stream_with_context
+        def generate():
+
+            full_response = ""
 
 
-        if not response.text:
+            try:
 
-            return jsonify({
-                "message": (
-                    "The AI could not generate a response. "
-                    "Please try again."
+                response_stream = (
+                    client.models.generate_content_stream(
+                        model="gemini-3.6-flash",
+                        contents=contents
+                    )
                 )
-            }), 502
 
 
-        ai_message = response.text.strip()
+                for chunk in response_stream:
+
+                    if not chunk.text:
+                        continue
+
+                    full_response += chunk.text
+
+                    yield chunk.text
 
 
-        # ------------------------------------------------
-        # Save messages
-        # ------------------------------------------------
+                # =================================
+                # Save completed conversation
+                # =================================
 
-        connection = get_db_connection()
-
-
-        connection.execute(
-            """
-            INSERT INTO ai_messages
-            (
-                user_id,
-                conversation_id,
-                role,
-                message
-            )
-            VALUES (?, ?, ?, ?)
-            """,
-            (
-                user_id,
-                conversation_id,
-                "user",
-                user_message
-            )
-        )
+                ai_message = full_response.strip()
 
 
-        connection.execute(
-            """
-            INSERT INTO ai_messages
-            (
-                user_id,
-                conversation_id,
-                role,
-                message
-            )
-            VALUES (?, ?, ?, ?)
-            """,
-            (
-                user_id,
-                conversation_id,
-                "assistant",
-                ai_message
-            )
-        )
+                if not ai_message:
+                    return
 
 
-        # ------------------------------------------------
-        # Automatically give conversation a title
-        # ------------------------------------------------
+                connection = get_db_connection()
 
-        current_title = conversation["title"]
 
-        if current_title == "New Conversation":
-
-            new_title = user_message[:60]
-
-            if len(user_message) > 60:
-                new_title += "..."
-
-            connection.execute(
-                """
-                UPDATE ai_conversations
-                SET title = ?
-                WHERE id = ?
-                  AND user_id = ?
-                """,
-                (
-                    new_title,
-                    conversation_id,
-                    user_id
+                connection.execute(
+                    """
+                    INSERT INTO ai_messages
+                    (
+                        user_id,
+                        conversation_id,
+                        role,
+                        message
+                    )
+                    VALUES (?, ?, ?, ?)
+                    """,
+                    (
+                        user_id,
+                        conversation_id,
+                        "user",
+                        user_message
+                    )
                 )
-            )
 
 
-        # ------------------------------------------------
-        # Update conversation timestamp
-        # ------------------------------------------------
+                connection.execute(
+                    """
+                    INSERT INTO ai_messages
+                    (
+                        user_id,
+                        conversation_id,
+                        role,
+                        message
+                    )
+                    VALUES (?, ?, ?, ?)
+                    """,
+                    (
+                        user_id,
+                        conversation_id,
+                        "assistant",
+                        ai_message
+                    )
+                )
 
-        connection.execute(
-            """
-            UPDATE ai_conversations
-            SET updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-              AND user_id = ?
-            """,
-            (
-                conversation_id,
-                user_id
-            )
+
+                # =================================
+                # Automatic conversation title
+                # =================================
+
+                if conversation["title"] == "New Conversation":
+
+                    new_title = user_message[:60]
+
+                    if len(user_message) > 60:
+                        new_title += "..."
+
+
+                    connection.execute(
+                        """
+                        UPDATE ai_conversations
+                        SET title = ?
+                        WHERE id = ?
+                          AND user_id = ?
+                        """,
+                        (
+                            new_title,
+                            conversation_id,
+                            user_id
+                        )
+                    )
+
+
+                # =================================
+                # Update timestamp
+                # =================================
+
+                connection.execute(
+                    """
+                    UPDATE ai_conversations
+                    SET updated_at = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                      AND user_id = ?
+                    """,
+                    (
+                        conversation_id,
+                        user_id
+                    )
+                )
+
+
+                connection.commit()
+                connection.close()
+
+
+            except Exception as error:
+
+                print(
+                    "GEMINI STREAM ERROR:",
+                    error
+                )
+
+
+        return Response(
+            generate(),
+            mimetype="text/plain"
         )
-
-
-        connection.commit()
-        connection.close()
-
-
-        return jsonify({
-            "conversation_id": conversation_id,
-            "message": ai_message
-        }), 200
 
 
     except Exception as error:
 
-        print("GEMINI ERROR:", error)
+        print(
+            "GEMINI ERROR:",
+            error
+        )
 
         return jsonify({
             "message": (

@@ -9,6 +9,13 @@
     <title>AI Study Assistant - LearnHub</title>
 
     <style>
+        html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
 
         * {
             box-sizing: border-box;
@@ -62,21 +69,29 @@
            ========================= */
 
         .container {
-            width: 94%;
-            max-width: 1200px;
+    width: 94%;
+    max-width: 1200px;
 
-            margin: 30px auto;
-        }
+    height: calc(100vh - 78px);
+
+    margin: 0 auto;
+
+    padding: 20px 0;
+
+    overflow: hidden;
+}
 
         .assistant-layout {
-            display: grid;
+    display: grid;
 
-            grid-template-columns: 270px 1fr;
+    grid-template-columns: 270px minmax(0, 1fr);
 
-            gap: 20px;
+    gap: 20px;
 
-            min-height: 650px;
-        }
+    height: 100%;
+
+    min-height: 0;
+}
 
 
         /* =========================
@@ -84,20 +99,23 @@
            ========================= */
 
         .conversation-sidebar {
-            background: white;
+    background: white;
 
-            border-radius: 18px;
+    border-radius: 18px;
 
-            box-shadow:
-                0 6px 20px rgba(0, 0, 0, 0.08);
+    box-shadow:
+        0 6px 20px rgba(0, 0, 0, 0.08);
 
-            padding: 18px;
+    padding: 18px;
 
-            display: flex;
-            flex-direction: column;
+    display: flex;
 
-            overflow: hidden;
-        }
+    flex-direction: column;
+
+    min-height: 0;
+
+    overflow: hidden;
+}
 
         .sidebar-header {
             display: flex;
@@ -135,15 +153,20 @@
         }
 
         .conversation-list {
-            flex: 1;
+    flex: 1;
 
-            overflow-y: auto;
+    min-height: 0;
 
-            display: flex;
-            flex-direction: column;
+    overflow-y: auto;
 
-            gap: 8px;
-        }
+    overflow-x: hidden;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
+}
 
         .conversation-item {
             width: 100%;
@@ -208,6 +231,22 @@
             display: flex;
             flex-direction: column;
         }
+        .chat-card {
+    background: white;
+
+    border-radius: 18px;
+
+    box-shadow:
+        0 6px 20px rgba(0, 0, 0, 0.08);
+
+    overflow: hidden;
+
+    display: flex;
+
+    flex-direction: column;
+
+    min-height: 0;
+}
 
         .chat-header {
             padding: 18px 22px;
@@ -259,16 +298,18 @@
            ========================= */
 
         .chat-messages {
-            flex: 1;
+    flex: 1;
 
-            min-height: 500px;
+    min-height: 0;
 
-            overflow-y: auto;
+    overflow-y: auto;
 
-            padding: 22px;
+    overflow-x: hidden;
 
-            background: #f8fafc;
-        }
+    padding: 22px;
+
+    background: #f8fafc;
+}
 
         .message {
             display: flex;
@@ -416,14 +457,18 @@
            ========================= */
 
         .chat-input-area {
-            padding: 16px;
+    flex-shrink: 0;
 
-            border-top: 1px solid #e5e7eb;
+    padding: 16px;
 
-            display: flex;
+    border-top: 1px solid #e5e7eb;
 
-            gap: 10px;
-        }
+    display: flex;
+
+    gap: 10px;
+
+    background: white;
+}
 
         .chat-input {
             flex: 1;
@@ -1196,198 +1241,242 @@
 
         async function sendMessage() {
 
-            const input =
-                document.getElementById(
-                    "chatInput"
-                );
+    const input =
+        document.getElementById("chatInput");
 
-            const button =
-                document.getElementById(
-                    "sendButton"
-                );
+    const button =
+        document.getElementById("sendButton");
 
-            const message =
-                input.value.trim();
+    const message =
+        input.value.trim();
 
 
-            if (!message) {
-                return;
+    if (!message) {
+        return;
+    }
+
+
+    if (!currentConversationId) {
+
+        await createNewConversation();
+
+        if (!currentConversationId) {
+            return;
+        }
+    }
+
+
+    const token =
+        localStorage.getItem("access_token");
+
+
+    addMessage(
+        message,
+        "user"
+    );
+
+    input.value = "";
+
+    button.disabled = true;
+
+
+    const messages =
+        document.getElementById(
+            "chatMessages"
+        );
+
+
+    const wrapper =
+        document.createElement("div");
+
+    wrapper.className =
+        "message assistant";
+
+
+    const bubble =
+        document.createElement("div");
+
+    bubble.className =
+        "message-bubble";
+
+
+    bubble.textContent =
+        "LearnHub AI is thinking...";
+
+
+    wrapper.appendChild(bubble);
+
+    messages.appendChild(wrapper);
+
+
+    messages.scrollTop =
+        messages.scrollHeight;
+
+
+    try {
+
+        const response = await fetch(
+            "/api/ai/chat",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json",
+
+                    "Authorization":
+                        "Bearer " + token
+                },
+
+                body: JSON.stringify({
+
+                    message: message,
+
+                    conversation_id:
+                        currentConversationId
+
+                })
+            }
+        );
+
+
+        if (!response.ok) {
+
+            const errorText =
+                await response.text();
+
+            bubble.textContent =
+                errorText ||
+                "Unable to process your question.";
+
+            button.disabled = false;
+
+            return;
+        }
+
+
+        // =====================================
+        // Read streaming response
+        // =====================================
+
+        const reader =
+            response.body.getReader();
+
+        const decoder =
+            new TextDecoder();
+
+
+        let fullResponse = "";
+
+        let firstChunk = true;
+
+
+        while (true) {
+
+            const {
+                value,
+                done
+            } = await reader.read();
+
+
+            if (done) {
+                break;
             }
 
 
-            if (!currentConversationId) {
-
-                await createNewConversation();
-
-                if (!currentConversationId) {
-                    return;
-                }
-            }
-
-
-            const token =
-                localStorage.getItem("access_token");
-
-
-            addMessage(
-                message,
-                "user"
-            );
-
-            input.value = "";
-
-            button.disabled = true;
-
-
-            const messages =
-                document.getElementById(
-                    "chatMessages"
+            const chunk =
+                decoder.decode(
+                    value,
+                    {
+                        stream: true
+                    }
                 );
 
 
-            const typing =
-                document.createElement("div");
+            if (firstChunk) {
 
-            typing.className =
-                "message assistant";
+                bubble.textContent = "";
 
-            typing.id =
-                "typingMessage";
+                firstChunk = false;
+            }
 
 
-            typing.innerHTML = `
-                <div class="message-bubble typing">
-                    LearnHub AI is thinking...
-                </div>
-            `;
+            fullResponse += chunk;
 
 
-            messages.appendChild(typing);
+            // Show response as it arrives
+            bubble.textContent =
+                fullResponse;
+
 
             messages.scrollTop =
                 messages.scrollHeight;
-
-
-            try {
-
-                const response = await fetch(
-                    "/api/ai/chat",
-                    {
-                        method: "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json",
-
-                            "Authorization":
-                                "Bearer " + token
-                        },
-
-                        body: JSON.stringify({
-                            message: message,
-
-                            conversation_id:
-                                currentConversationId
-                        })
-                    }
-                );
-
-
-                const data =
-                    await response.json();
-
-
-                const typingMessage =
-                    document.getElementById(
-                        "typingMessage"
-                    );
-
-
-                if (typingMessage) {
-                    typingMessage.remove();
-                }
-
-
-                if (!response.ok) {
-
-                    addMessage(
-                        data.message ||
-                        "Unable to process your question.",
-                        "assistant"
-                    );
-
-                    button.disabled = false;
-
-                    return;
-                }
-
-
-                addMessage(
-                    data.message,
-                    "assistant"
-                );
-
-
-                await loadConversations();
-
-
-                /*
-                 * Refresh current title.
-                 */
-
-                if (currentConversationId) {
-
-                    const current =
-                        await fetch(
-                            "/api/ai/conversations/" +
-                            currentConversationId,
-                            {
-                                headers: {
-                                    "Authorization":
-                                        "Bearer " + token
-                                }
-                            }
-                        );
-
-                    const currentData =
-                        await current.json();
-
-                    if (currentData.conversation) {
-
-                        document.getElementById(
-                            "chatTitle"
-                        ).textContent =
-                            currentData.conversation.title;
-                    }
-                }
-
-
-            } catch (error) {
-
-                console.error(error);
-
-
-                const typingMessage =
-                    document.getElementById(
-                        "typingMessage"
-                    );
-
-
-                if (typingMessage) {
-                    typingMessage.remove();
-                }
-
-
-                addMessage(
-                    "I'm having trouble connecting right now. Please try again.",
-                    "assistant"
-                );
-
-            }
-
-
-            button.disabled = false;
         }
+
+
+        // =====================================
+        // Apply Markdown formatting
+        // =====================================
+
+        bubble.innerHTML =
+            formatAssistantMessage(
+                fullResponse
+            );
+
+
+        // =====================================
+        // Refresh conversation list
+        // =====================================
+
+        await loadConversations();
+
+
+        // Update current title locally
+        const conversationResponse =
+            await fetch(
+                "/api/ai/conversations/" +
+                currentConversationId,
+                {
+                    headers: {
+                        "Authorization":
+                            "Bearer " + token
+                    }
+                }
+            );
+
+
+        const conversationData =
+            await conversationResponse.json();
+
+
+        if (conversationData.conversation) {
+
+            document.getElementById(
+                "chatTitle"
+            ).textContent =
+                conversationData.conversation.title;
+        }
+
+
+        messages.scrollTop =
+            messages.scrollHeight;
+
+
+    } catch (error) {
+
+        console.error(
+            "Streaming error:",
+            error
+        );
+
+
+        bubble.textContent =
+            "I'm having trouble connecting right now. Please try again.";
+    }
+
+
+    button.disabled = false;
+}
 
 
         /* =====================================================
