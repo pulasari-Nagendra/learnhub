@@ -1,8 +1,9 @@
 .env
 learnhub.db
+learnhub_backup.sql
 __pycache__/
 *.pyc
-.venv/
 venv/
+.venv/
 .vscode/
-Git-2.55.0.5-64-bit.exe
+*.exe

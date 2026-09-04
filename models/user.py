@@ -28,7 +28,6 @@ def create_user(
             backlogs
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        RETURNING id
         """,
         (
             name,
@@ -43,7 +42,7 @@ def create_user(
         )
     )
 
-    user_id = cursor.fetchone()["id"]
+    user_id = cursor.lastrowid
 
     connection.commit()
     connection.close()

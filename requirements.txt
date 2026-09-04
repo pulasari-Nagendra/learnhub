@@ -1,6 +1,8 @@
 Flask
 Flask-JWT-Extended
+mysql-connector-python
+python-dotenv
 Werkzeug
-openpyxl
-psycopg2-binary
+google-genai
 gunicorn
+psycopg2-binary

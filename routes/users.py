@@ -8,6 +8,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from database.db import get_db_connection
+from models.features import user_has_feature
 
 users_bp = Blueprint("users", __name__)
 
@@ -24,16 +25,17 @@ def dashboard():
     user = conn.execute(
         """
         SELECT
-            id,
-            name,
-            email,
-            student_id,
-            branch,
-            semester,
-            cgpa,
-            previous_sgpa,
-            backlogs
-        FROM users
+        id,
+        name,
+        email,
+        student_id,
+        branch,
+        semester,
+        cgpa,
+        previous_sgpa,
+        backlogs,
+        role
+    FROM users
         WHERE id = ?
         """,
         (user_id,)
@@ -56,7 +58,8 @@ def dashboard():
             "semester": user["semester"],
             "cgpa": user["cgpa"],
             "previous_sgpa": user["previous_sgpa"],
-            "backlogs": user["backlogs"]
+            "backlogs": user["backlogs"],
+            "role": user["role"]
         }
     }), 200
 
@@ -198,3 +201,26 @@ def export_students():
             os.remove(temp_path)
 
     return response
+@users_bp.route("/api/check-feature/<feature_key>", methods=["GET"])
+@jwt_required()
+def check_feature(feature_key):
+
+    user_id = get_jwt_identity()
+
+    allowed = user_has_feature(
+        user_id,
+        feature_key
+    )
+
+    if allowed:
+        return jsonify({
+            "feature": feature_key,
+            "allowed": True,
+            "message": "Feature access granted"
+        }), 200
+
+    return jsonify({
+        "feature": feature_key,
+        "allowed": False,
+        "message": "Upgrade your plan to access this feature"
+    }), 403
